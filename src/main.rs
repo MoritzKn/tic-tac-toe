@@ -6,34 +6,37 @@
 
 use std::io;
 use std::io::Write;
+use std::fmt;
+use FieldState::*;
 
-
-#[derive(PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum FieldState {
-    None,
+    Empty,
     Cross,
     Circle,
 }
 
 impl FieldState {
     fn toggle(&mut self) {
-        *self = match self {
-            &mut FieldState::Cross => FieldState::Circle,
-            &mut FieldState::Circle => FieldState::Cross,
-            _ => FieldState::None,
-        };
-    }
-
-    fn to_str(&self) -> &str {
-        return match self {
-            &FieldState::Cross => "cross",
-            &FieldState::Circle => "circle",
-            &FieldState::None => "none",
+        *self = match *self {
+            Cross => Circle,
+            Circle => Cross,
+            _ => Empty,
         };
     }
 }
 
-#[derive(Copy, Clone)]
+impl fmt::Display for FieldState {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Cross => write!(f, "cross"),
+            Circle => write!(f, "circle"),
+            Empty => write!(f, "empty"),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 struct Position {
     x: usize,
     y: usize,
@@ -41,30 +44,30 @@ struct Position {
 
 type Pitch = [[FieldState; 3]; 3];
 
-fn main(){
+fn main() {
     println!("Tic Tac Toe");
 
-    let mut pitch = [[FieldState::None; 3]; 3];
-    let mut active_player = FieldState::Circle;
+    let mut pitch = [[Empty; 3]; 3];
+    let mut active_player = Circle;
     let mut round_index = 0;
-    let mut winner = FieldState::None;
+    let mut winner = Empty;
 
     display_pitch(&pitch);
 
-    while winner == FieldState::None {
+    while winner == Empty {
         active_player.toggle();
         round_index += 1;
 
         println!("\n*****************");
         println!("round:  {}", round_index);
-        println!("player: {}", active_player.to_str());
+        println!("player: {}", active_player);
         print!("move:   ");
 
         let mut player_move;
         loop {
             player_move = get_move();
 
-            if get_field_in_pitch(&pitch, &player_move) != FieldState::None {
+            if get_field_in_pitch(&pitch, &player_move) != Empty {
                 // the field is already set, try again
                 print!("field already taken, please try again: ");
                 continue;
@@ -83,14 +86,14 @@ fn main(){
         winner = get_winner(&pitch);
     }
 
-    println!("Player {} won after {} rounds", winner.to_str(), round_index);
+    println!("{} won after {} rounds", winner, round_index);
 }
 
 
 // paint a tic tac toe pitch with ASCII characters and show the current game state
-fn display_pitch (pitch : &Pitch) {
+fn display_pitch(pitch: &Pitch) {
 
-    // the column in indices
+    // the column indices
     println!("   1   2   3 ");
 
     for y in 0..3 {
@@ -98,7 +101,7 @@ fn display_pitch (pitch : &Pitch) {
             print!("  ---+---+---\n");
         }
 
-        // the row in index
+        // the row index
         print!("{} ", y + 1);
 
         for x in 0..3 {
@@ -107,9 +110,9 @@ fn display_pitch (pitch : &Pitch) {
             }
 
             match pitch[x][y] {
-                FieldState::None => print!("   "),
-                FieldState::Cross => print!(" X "),
-                FieldState::Circle => print!(" O "),
+                Empty => print!("   "),
+                Cross => print!(" X "),
+                Circle => print!(" O "),
             }
         }
         println!("");
@@ -117,7 +120,7 @@ fn display_pitch (pitch : &Pitch) {
 }
 
 /// get the next move from stdin
-fn get_move () -> Position {
+fn get_move() -> Position {
     let mut first_try = true;
 
     loop {
@@ -129,9 +132,12 @@ fn get_move () -> Position {
         let mut input = String::new();
 
         // flush stdout because we used 'print!', which doesn't auto flush
-        io::stdout().flush()
-            .ok().expect("flush() fail");
-        io::stdin().read_line(&mut input)
+        io::stdout()
+            .flush()
+            .ok()
+            .expect("flush() fail");
+        io::stdin()
+            .read_line(&mut input)
             .expect("failed to read line");
 
         if input.trim().is_empty() {
@@ -155,7 +161,10 @@ fn get_move () -> Position {
         }
 
         // minus one to translate from human indices to computer indices
-        return Position { x: x-1, y: y-1 };
+        return Position {
+            x: x - 1,
+            y: y - 1,
+        };
     }
 }
 
@@ -168,46 +177,38 @@ fn set_field_in_pitch(pitch: &mut Pitch, pos: &Position, state: &FieldState) {
 }
 
 /// seach for 3 equal fields in a row.
-/// if there is a row, it returns the "row owner".
-/// if there is not row it returns FieldState::None.
+/// if there is a row, the function returns the "row owner".
+/// if there is not row it returns FieldState::Empty.
 fn get_winner(pitch: &Pitch) -> FieldState {
-
     // test if 3 fields are equal
-    fn row_owner(a: FieldState, b: FieldState, c: FieldState) -> FieldState {
-        if a == b && b == c {
-            return a;
+    fn row_owner(a: FieldState, b: FieldState, c: FieldState) -> Option<FieldState> {
+        if a != Empty && a == b && b == c {
+            return Some(a);
         }
-        return FieldState::None;
+        return None;
     }
-
-    // variable to remember possible winners
-    let mut test_owner;
 
     for a in 0..3 {
         // test all columns
-        test_owner = row_owner(pitch[a][0], pitch[a][1], pitch[a][2]);
-        if test_owner != FieldState::None {
-            return test_owner;
+        if let Some(owner) = row_owner(pitch[a][0], pitch[a][1], pitch[a][2]) {
+            return owner;
         }
 
         // test all rows
-        test_owner = row_owner(pitch[0][a], pitch[1][a], pitch[2][a]);
-        if test_owner != FieldState::None {
-            return test_owner;
+        if let Some(owner) = row_owner(pitch[0][a], pitch[1][a], pitch[2][a]) {
+            return owner;
         }
     }
 
     // test top left to bottom right
-    test_owner = row_owner(pitch[0][0], pitch[1][1], pitch[2][2]);
-    if test_owner != FieldState::None {
-        return test_owner;
+    if let Some(owner) = row_owner(pitch[0][0], pitch[1][1], pitch[2][2]) {
+        return owner;
     }
 
     // test top right to bottom left
-    test_owner = row_owner(pitch[2][0], pitch[1][1], pitch[0][2]);
-    if test_owner != FieldState::None {
-        return test_owner;
+    if let Some(owner) = row_owner(pitch[2][0], pitch[1][1], pitch[0][2]) {
+        return owner;
     }
 
-    return FieldState::None;
+    return Empty;
 }
