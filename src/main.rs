@@ -145,7 +145,9 @@ fn get_move() -> Position {
             .read_line(&mut input)
             .expect("failed to read line");
 
-        if input.trim().is_empty() {
+        input = String::from(input.trim());
+
+        if input.is_empty() {
             continue;
         }
 
