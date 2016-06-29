@@ -178,7 +178,7 @@ fn set_field_in_pitch(pitch: &mut Pitch, pos: &Position, state: &FieldState) {
 
 /// seach for 3 equal fields in a row.
 /// if there is a row, the function returns the "row owner".
-/// if there is not row it returns FieldState::Empty.
+/// if there is not row, it returns FieldState::Empty.
 fn get_winner(pitch: &Pitch) -> FieldState {
     // test if 3 fields are equal
     fn row_owner(a: FieldState, b: FieldState, c: FieldState) -> Option<FieldState> {
