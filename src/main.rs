@@ -42,7 +42,8 @@ struct Position {
     y: usize,
 }
 
-type Pitch = [[FieldState; 3]; 3];
+type Line = [FieldState; 3];
+type Pitch = [Line; 3];
 
 fn main() {
     println!("Tic Tac Toe");
@@ -54,7 +55,7 @@ fn main() {
 
     display_pitch(&pitch);
 
-    while winner == Empty {
+    while winner == Empty && !is_draw(&pitch) {
         active_player.toggle();
         round_index += 1;
 
@@ -86,7 +87,11 @@ fn main() {
         winner = get_winner(&pitch);
     }
 
-    println!("{} won after {} rounds", winner, round_index);
+    if winner != Empty {
+        println!("{} won after {} rounds", winner, round_index);
+    } else {
+        println!("Draw after {} rounds", round_index);
+    }
 }
 
 
@@ -211,4 +216,49 @@ fn get_winner(pitch: &Pitch) -> FieldState {
     }
 
     return Empty;
+}
+
+/// Check if no one is able to win in this game aka it's a draw
+fn is_draw(pitch: &Pitch) -> bool {
+
+    /// Check if it's still possible to win using this line
+    fn is_possible_row(line: Line) -> bool {
+        let mut first_player = Empty;
+        for field in line.into_iter() {
+            if *field != Empty {
+                if first_player == Empty {
+                    first_player = *field;
+                } else if first_player != *field {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
+    // test all columns and all rows
+    for a in 0..3 {
+        // test column
+        if is_possible_row(pitch[a]) {
+            return false;
+        }
+
+        // test row
+        if is_possible_row([pitch[0][a], pitch[1][a], pitch[2][a]]) {
+            return false;
+        }
+    }
+
+    // test top left to bottom right
+    if is_possible_row([pitch[0][0], pitch[1][1], pitch[2][2]]) {
+        return false;
+    }
+
+    // test top right to bottom left
+    if is_possible_row([pitch[2][0], pitch[1][1], pitch[0][2]]) {
+        return false;
+    }
+
+    return true;
 }
