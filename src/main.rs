@@ -188,32 +188,32 @@ fn set_field_in_pitch(pitch: &mut Pitch, pos: &Position, state: &FieldState) {
 /// if there is not row, it returns FieldState::Empty.
 fn get_winner(pitch: &Pitch) -> FieldState {
     // test if 3 fields are equal
-    fn row_owner(a: FieldState, b: FieldState, c: FieldState) -> Option<FieldState> {
-        if a != Empty && a == b && b == c {
-            return Some(a);
+    fn row_owner(line: [FieldState; 3]) -> Option<FieldState> {
+        if line[0] != Empty && line[0] == line[1] && line[1] == line[2] {
+            return Some(line[0]);
         }
         return None;
     }
 
-    for a in 0..3 {
+    for n in 0..3 {
         // test all columns
-        if let Some(owner) = row_owner(pitch[a][0], pitch[a][1], pitch[a][2]) {
+        if let Some(owner) = row_owner(pitch[n]) {
             return owner;
         }
 
         // test all rows
-        if let Some(owner) = row_owner(pitch[0][a], pitch[1][a], pitch[2][a]) {
+        if let Some(owner) = row_owner([pitch[0][n], pitch[1][n], pitch[2][n]]) {
             return owner;
         }
     }
 
     // test top left to bottom right
-    if let Some(owner) = row_owner(pitch[0][0], pitch[1][1], pitch[2][2]) {
+    if let Some(owner) = row_owner([pitch[0][0], pitch[1][1], pitch[2][2]]) {
         return owner;
     }
 
     // test top right to bottom left
-    if let Some(owner) = row_owner(pitch[2][0], pitch[1][1], pitch[0][2]) {
+    if let Some(owner) = row_owner([pitch[2][0], pitch[1][1], pitch[0][2]]) {
         return owner;
     }
 
