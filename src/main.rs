@@ -7,32 +7,36 @@
 use std::io;
 use std::io::Write;
 use std::fmt;
-use FieldState::*;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
-enum FieldState {
+enum Player {
     Empty,
     Cross,
     Circle,
 }
 
-impl FieldState {
-    fn toggle(&mut self) {
-        *self = match *self {
-            Cross => Circle,
-            Circle => Cross,
-            _ => Empty,
-        };
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Player::Cross => write!(f, "cross"),
+            Player::Circle => write!(f, "circle"),
+            Player::Empty => write!(f, "no one"),
+        }
     }
 }
 
-impl fmt::Display for FieldState {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Cross => write!(f, "cross"),
-            Circle => write!(f, "circle"),
-            Empty => write!(f, "empty"),
-        }
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+struct Players {
+    current: Player,
+}
+
+impl Players {
+    fn toggle(&mut self) {
+        self.current = match self.current {
+            Player::Cross => Player::Circle,
+            Player::Circle => Player::Cross,
+            Player::Empty => Player::Empty,
+        };
     }
 }
 
@@ -42,44 +46,44 @@ struct Position {
     y: usize,
 }
 
-type Line = [FieldState; 3];
+type Line = [Player; 3];
 type Pitch = [Line; 3];
 
 fn main() {
     println!("Tic Tac Toe");
 
-    let mut pitch = [[Empty; 3]; 3];
-    let mut active_player = Circle;
+    let mut pitch = [[Player::Empty; 3]; 3];
+    let mut players = Players { current: Player::Circle };
     let mut round_index = 0;
-    let mut winner = Empty;
+    let mut winner = Player::Empty;
+
 
     display_pitch(&pitch);
 
-    while winner == Empty && !is_draw(&pitch) {
-        active_player.toggle();
+    while winner == Player::Empty && !is_draw(&pitch) {
+        players.toggle();
         round_index += 1;
 
         println!("\n*****************");
         println!("round:  {}", round_index);
-        println!("player: {}", active_player);
+        println!("player: {}", players.current);
         print!("move:   ");
 
         let mut player_move;
         loop {
             player_move = get_move();
-
-            if get_field_in_pitch(&pitch, &player_move) != Empty {
-                // the field is already set, try again
-                print!("field already taken, please try again: ");
-                continue;
-            } else {
+            let field_owner = get_field_in_pitch(&pitch, &player_move);
+            if field_owner == Player::Empty {
                 // field is empty, input accepted
                 break;
             }
+
+            // the field is already set, try again
+            print!("field already taken by {}, please try again: ", field_owner)
         }
 
         // save the players move
-        set_field_in_pitch(&mut pitch, &player_move, &active_player);
+        set_field_in_pitch(&mut pitch, &player_move, &players.current);
         // show the current game state
         display_pitch(&pitch);
 
@@ -87,7 +91,7 @@ fn main() {
         winner = get_winner(&pitch);
     }
 
-    if winner != Empty {
+    if winner != Player::Empty {
         println!("{} won after {} rounds", winner, round_index);
     } else {
         println!("Draw after {} rounds", round_index);
@@ -115,9 +119,9 @@ fn display_pitch(pitch: &Pitch) {
             }
 
             match pitch[x][y] {
-                Empty => print!("   "),
-                Cross => print!(" X "),
-                Circle => print!(" O "),
+                Player::Empty => print!("   "),
+                Player::Cross => print!(" X "),
+                Player::Circle => print!(" O "),
             }
         }
         println!("");
@@ -175,21 +179,21 @@ fn get_move() -> Position {
     }
 }
 
-fn get_field_in_pitch(pitch: &Pitch, pos: &Position) -> FieldState {
+fn get_field_in_pitch(pitch: &Pitch, pos: &Position) -> Player {
     pitch[pos.x][pos.y]
 }
 
-fn set_field_in_pitch(pitch: &mut Pitch, pos: &Position, state: &FieldState) {
+fn set_field_in_pitch(pitch: &mut Pitch, pos: &Position, state: &Player) {
     pitch[pos.x][pos.y] = *state;
 }
 
 /// seach for 3 equal fields in a row.
 /// if there is a row, the function returns the "row owner".
-/// if there is not row, it returns FieldState::Empty.
-fn get_winner(pitch: &Pitch) -> FieldState {
+/// if there is not row, it returns Player::Empty.
+fn get_winner(pitch: &Pitch) -> Player {
     // test if 3 fields are equal
-    fn row_owner(line: [FieldState; 3]) -> Option<FieldState> {
-        if line[0] != Empty && line[0] == line[1] && line[1] == line[2] {
+    fn row_owner(line: [Player; 3]) -> Option<Player> {
+        if line[0] != Player::Empty && line[0] == line[1] && line[1] == line[2] {
             return Some(line[0]);
         }
         return None;
@@ -217,7 +221,7 @@ fn get_winner(pitch: &Pitch) -> FieldState {
         return owner;
     }
 
-    return Empty;
+    return Player::Empty;
 }
 
 /// Check if no one is able to win in this game aka it's a draw
@@ -225,10 +229,10 @@ fn is_draw(pitch: &Pitch) -> bool {
 
     /// Check if it's still possible to win using this line
     fn is_possible_row(line: Line) -> bool {
-        let mut first_player = Empty;
+        let mut first_player = Player::Empty;
         for field in line.into_iter() {
-            if *field != Empty {
-                if first_player == Empty {
+            if *field != Player::Empty {
+                if first_player == Player::Empty {
                     first_player = *field;
                 } else if first_player != *field {
                     return false;
