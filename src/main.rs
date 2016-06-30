@@ -143,9 +143,9 @@ fn main() {
 
 /// asks the user if he or she wants to play against an AI
 fn prompt_ai_options(player: &mut Players) {
-    print!("Should cross be played by a computer ");
+    print!("Should cross be controlled by the computer ");
     player.cross_is_ai = prompt_confirm();
-    print!("Should circle be played by a computer ");
+    print!("Should circle be controlled by the computer ");
     player.circle_is_ai = prompt_confirm();
 }
 
