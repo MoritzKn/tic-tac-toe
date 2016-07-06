@@ -1,5 +1,9 @@
+
 # Tic Tac Toe
 A simple, command line based, Tic-Tac-Toe game written in rust (just a programming exercise).
+
+![Logo](doc/logo.png)
+
 
 # Features
 - two player Multiplayer
@@ -7,51 +11,7 @@ A simple, command line based, Tic-Tac-Toe game written in rust (just a programmi
 
 # Example game
 
-```
-$ ./target/release/tic-tac-toe
-Tic Tac Toe
-Should cross be controlled by the computer (y/n): no
-Should circle be controlled by the computer (y/n): yes
-
-*****************
-   1   2   3
-1    |   |   
-  ---+---+---
-2    |   |   
-  ---+---+---
-3    |   |   
-
-*****************
-round:  1
-player: cross
-move:   2 3
-
-*****************
-   1   2   3
-1    |   |   
-  ---+---+---
-2    |   |   
-  ---+---+---
-3    | X |   
-
-*****************
-round:  2
-player: circle  (computer player)
-move:   2 1
-
-*****************
-   1   2   3
-1    | O |   
-  ---+---+---
-2    |   |   
-  ---+---+---
-3    | X |   
-
-*****************
-round:  3
-player: cross
-move:   █
-```
+![Example](doc/example.png)
 
 ## Build instructions
 
