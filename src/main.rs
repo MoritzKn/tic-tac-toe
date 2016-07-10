@@ -68,14 +68,14 @@ impl Players {
     fn get_ai_move(&self, board: &Board) -> Move {
 
         /// apply the value of m to n if m is larger than n
-        fn applay_if_higher (n: &mut i32, m: i32) {
+        fn applay_if_higher(n: &mut i32, m: i32) {
             if m > *n {
                 *n = m;
             }
         }
 
         /// apply the value of m to n if m is smaller than n
-        fn applay_if_lower (n: &mut i32, m: i32) {
+        fn applay_if_lower(n: &mut i32, m: i32) {
             if m < *n {
                 *n = m;
             }
@@ -110,7 +110,11 @@ impl Players {
                 for x in 0..3 {
                     let player_move = Move::new(x, y);
                     if board.get_field(&player_move) == Player::Empty {
-                        let score = get_move_score(&player_move, &mut board, test_player, player_on_turn, depth);
+                        let score = get_move_score(&player_move,
+                                                   &mut board,
+                                                   test_player,
+                                                   player_on_turn,
+                                                   depth);
                         if use_max {
                             applay_if_higher(&mut best_score, score);
                         } else {
@@ -123,9 +127,15 @@ impl Players {
         }
 
         // helper function for the minmax function
-        fn get_move_score(player_move: &Move, mut board: &mut Board, test_player: Player, player_on_turn: Player, depth: i32) -> i32 {
+        fn get_move_score(player_move: &Move,
+                          mut board: &mut Board,
+                          test_player: Player,
+                          player_on_turn: Player,
+                          depth: i32)
+                          -> i32 {
             board.set_field(&player_move, test_player);
-            let score = minmax(&mut board, test_player.get_opponent(), player_on_turn, depth + 1);
+            let opponent = test_player.get_opponent();
+            let score = minmax(&mut board, opponent, player_on_turn, depth + 1);
             board.set_field(&player_move, Player::Empty);
             return score;
         }
@@ -185,9 +195,9 @@ impl Players {
             let (x_str, y_str) = input.split_at(1);
 
             let x: usize = match x_str.trim() {
-                "a"|"A" => 1,
-                "b"|"B" => 2,
-                "c"|"C" => 3,
+                "a" | "A" => 1,
+                "b" | "B" => 2,
+                "c" | "C" => 3,
                 _ => {
                     println!("You have to enter A, B or C and a number");
                     continue;
@@ -226,12 +236,14 @@ impl Players {
     /// get a pseudo random move based on the system time
     fn get_random_move() -> Move {
         match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
-            Ok(elapsed) => match elapsed.as_secs() % 4u64 {
-                0 => Move::new(2, 2),
-                1 => Move::new(2, 0),
-                2 => Move::new(0, 2),
-                _ => Move::new(0, 0),
-            },
+            Ok(elapsed) => {
+                match elapsed.as_secs() % 4u64 {
+                    0 => Move::new(2, 2),
+                    1 => Move::new(2, 0),
+                    2 => Move::new(0, 2),
+                    _ => Move::new(0, 0),
+                }
+            }
             // in case of an error just go with a default move
             Err(_) => Move::new(2, 2),
         }
@@ -252,7 +264,7 @@ impl Move {
 
 impl fmt::Display for Move {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "x: {}, y:{}", self.x+1, self.y+1)
+        write!(f, "x: {}, y:{}", self.x + 1, self.y + 1)
     }
 }
 
@@ -261,12 +273,12 @@ type Line = [Player; 3];
 
 #[derive(Debug, Copy, Clone)]
 struct Board {
-    fields: [Line; 3]
+    fields: [Line; 3],
 }
 
 impl Board {
-    fn new () -> Board {
-        Board{ fields: [[Player::Empty; 3]; 3] }
+    fn new() -> Board {
+        Board { fields: [[Player::Empty; 3]; 3] }
     }
 
     fn set_field(&mut self, pos: &Move, value: Player) {
@@ -438,7 +450,8 @@ fn main() {
     players.circle_is_ai = prompt_confirm();
 
     if !(players.cross_is_ai && players.circle_is_ai) {
-        println!("Make a move by entering the vertical position (A, B or C) and the horizontal position (1, 2 or 3)");
+        println!("Make a move by entering the vertical position (A, B or C) and the horizontal \
+                  position (1, 2 or 3)");
     }
 
     print!("\n");
@@ -468,14 +481,13 @@ fn main() {
         if players.current_is_ai() {
             // show move
             print!("{} {}",
-                match player_move.x {
-                    0 => "A",
-                    1 => "B",
-                    2 => "C",
-                    _ => "Error", // <- practically impossible
-                },
-                player_move.y+1
-            );
+                   match player_move.x {
+                       0 => "A",
+                       1 => "B",
+                       2 => "C",
+                       _ => "Error", // <- should be impossible
+                   },
+                   player_move.y + 1);
         }
 
         // save the players move
