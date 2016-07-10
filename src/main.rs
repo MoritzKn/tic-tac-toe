@@ -157,7 +157,7 @@ impl Players {
     }
 
     /// get the next move from stdin
-    fn get_user_move(self, board: &Board) -> Move {
+    fn get_user_move(&self, board: &Board) -> Move {
         let mut first_try = true;
 
         loop {
@@ -223,6 +223,23 @@ impl Players {
 
             return player_move;
         }
+    }
+
+    /// get a pseudo random move based on the system time
+    fn get_random_move() -> Move {
+        let player_move = match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+            Ok(elapsed) => match elapsed.as_secs() % 4u64 {
+                0 => Move::new(2, 2),
+                1 => Move::new(2, 0),
+                2 => Move::new(0, 2),
+                _ => Move::new(0, 0),
+            },
+            // in case of an error just go with a default move
+            Err(_) => Move::new(2, 2),
+        };
+
+        print!("{} {}", player_move.x+1, player_move.y+1);
+        return player_move;
     }
 }
 
@@ -427,12 +444,12 @@ fn main() {
     print!("Should circle be controlled by the computer? ");
     players.circle_is_ai = prompt_confirm();
 
-    board.display();
-
     if !(players.cross_is_ai && players.circle_is_ai) {
         println!("Make a move by entering two numbers.");
         println!("The first number is the horizontal position the second the vertical.");
     }
+
+    board.display();
 
     while winner == Player::Empty && !board.is_draw() {
         players.toggle();
@@ -446,7 +463,14 @@ fn main() {
         println!("");
         print!("move:   ");
 
-        let player_move = players.get_next_move(&board);
+        let player_move;
+
+        if round_index == 1 && players.current_is_ai() {
+            player_move = Players::get_random_move();
+        } else {
+            player_move = players.get_next_move(&board)
+        }
+
         // save the players move
         board.set_field(&player_move, players.current);
         // show the current game state
