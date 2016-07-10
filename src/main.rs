@@ -150,9 +150,6 @@ impl Players {
             }
         }
 
-        // show move in terminal
-        println!("{} {}", best_move.x+1, best_move.y+1);
-
         return best_move;
     }
 
@@ -187,10 +184,12 @@ impl Players {
 
             let (x_str, y_str) = input.split_at(1);
 
-            let x: usize = match x_str.trim().parse() {
-                Ok(num) => num,
-                Err(_) => {
-                    println!("You have to enter two numbers");
+            let x: usize = match x_str.trim() {
+                "a"|"A" => 1,
+                "b"|"B" => 2,
+                "c"|"C" => 3,
+                _ => {
+                    println!("You have to enter A, B or C and a number");
                     continue;
                 }
             };
@@ -198,13 +197,13 @@ impl Players {
             let y: usize = match y_str.trim().parse() {
                 Ok(num) => num,
                 Err(_) => {
-                    println!("You have to enter two numbers");
+                    println!("The horizontal position has to be between 1 and 3");
                     continue;
                 }
             };
 
-            if x > 3 || y > 3 {
-                println!("Each number has to be between 1 and 3");
+            if y > 3 {
+                println!("The horizontal position has to be between 1 and 3");
                 continue;
             }
 
@@ -216,8 +215,7 @@ impl Players {
 
             let field_owner = board.get_field(&player_move);
             if field_owner != Player::Empty {
-                // the field is already set, try again
-                println!("field already taken by {}", field_owner);
+                println!("This field is already taken by {}", field_owner);
                 continue;
             }
 
@@ -227,7 +225,7 @@ impl Players {
 
     /// get a pseudo random move based on the system time
     fn get_random_move() -> Move {
-        let player_move = match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+        match std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
             Ok(elapsed) => match elapsed.as_secs() % 4u64 {
                 0 => Move::new(2, 2),
                 1 => Move::new(2, 0),
@@ -236,10 +234,7 @@ impl Players {
             },
             // in case of an error just go with a default move
             Err(_) => Move::new(2, 2),
-        };
-
-        print!("{} {}", player_move.x+1, player_move.y+1);
-        return player_move;
+        }
     }
 }
 
@@ -366,9 +361,8 @@ impl Board {
 
     /// write the board with ASCII characters to stdout and show the current game state
     fn display(&self) {
-        println!("\n*****************");
         // column indices
-        println!("   1   2   3 ");
+        println!("   A   B   C ");
 
         for y in 0..3 {
             if y != 0 {
@@ -391,7 +385,6 @@ impl Board {
             }
             println!("");
         }
-        println!("\n*****************");
     }
 }
 
@@ -445,23 +438,24 @@ fn main() {
     players.circle_is_ai = prompt_confirm();
 
     if !(players.cross_is_ai && players.circle_is_ai) {
-        println!("Make a move by entering two numbers.");
-        println!("The first number is the horizontal position the second the vertical.");
+        println!("Make a move by entering the vertical position (A, B or C) and the horizontal position (1, 2 or 3)");
     }
 
+    print!("\n");
     board.display();
 
     while winner == Player::Empty && !board.is_draw() {
         players.toggle();
         round_index += 1;
 
-        println!("round:  {}", round_index);
-        print!("player: {} ", players.current);
+        println!("\n*****************");
+        println!("Round:  {}", round_index);
+        print!("Player: {} ", players.current);
         if players.current_is_ai() {
             print!(" (computer player)");
         }
         println!("");
-        print!("move:   ");
+        print!("Move:   ");
 
         let player_move;
 
@@ -471,9 +465,23 @@ fn main() {
             player_move = players.get_next_move(&board)
         }
 
+        if players.current_is_ai() {
+            // show move
+            print!("{} {}",
+                match player_move.x {
+                    0 => "A",
+                    1 => "B",
+                    2 => "C",
+                    _ => "Error", // <- practically impossible
+                },
+                player_move.y+1
+            );
+        }
+
         // save the players move
         board.set_field(&player_move, players.current);
         // show the current game state
+        print!("\n");
         board.display();
         // test if there are 3 equal fields in a row
         winner = board.get_winner();
