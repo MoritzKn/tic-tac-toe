@@ -450,7 +450,7 @@ fn main() {
     players.circle_is_ai = prompt_confirm();
 
     if !(players.cross_is_ai && players.circle_is_ai) {
-        println!("Make a move by entering the vertical position (A, B or C) and the horizontal \
+        println!("Make a move by entering the horizontal position (A, B or C) and the vertical \
                   position (1, 2 or 3)");
     }
 
