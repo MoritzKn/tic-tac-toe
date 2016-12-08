@@ -1,22 +1,19 @@
-
 # Tic Tac Toe
-A simple, command line based, Tic-Tac-Toe game written in rust (just a programming exercise).
+Simple CLI based Tic-Tac-Toe game written in [Rust](https://www.rust-lang.org).
 
 ![Logo](doc/logo.png)
 
-
 # Features
-- two player Multiplayer
-- single player against an (unbeatable) AI
-
-# Example game
+- Two player Multiplayer
+- Single player against an (*unbeatable*) AI
 
 ![Example](doc/example.png)
 
 ## Build instructions
 
-The software can easily be complied with the rust package manager [cargo](https://crates.io):
+To compile execute:  
+(Requires [cargo](https://crates.io))
 ```sh
 cargo build --release
 ```
-The executable can be found under `./target/release/tic-tac-toe`
+The executable will be placed under `./target/release/tic-tac-toe`
